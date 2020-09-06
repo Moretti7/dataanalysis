@@ -41,11 +41,11 @@ fun main() {
 
     objectMapper.writeValue(
         FileWriter("word_length_distribution.json"),
-        categoryToMessages.mapValues { wordLengthCount(it.value.splitStringsToWords().map { it.length }) }
+        categoryToMessages.mapValues { wordLengthCount(it.value.splitStringsToWords().toSet().map { it.length }) }
     )
     objectMapper.writeValue(
         FileWriter("message_length_distribution.json"),
-        categoryToMessages.mapValues { wordLengthCount(it.value.map { it.length }) }
+        categoryToMessages.mapValues { wordLengthCount(it.value.toSet().map { it.length }) }
     )
 
     writeToFiles(typeToWordWithCount)

@@ -24,10 +24,11 @@ def get_products_to_exclude(all_products: List[list], combinations: Set[tuple], 
 
 if __name__ == '__main__':
     sheet = xlrd.open_workbook('Online Retail Mini.xlsx').sheet_by_index(0)
+    # sheet = xlrd.open_workbook('Online Retail.xlsx').sheet_by_index(0)
     invoice_to_product = dict()
     for row in range(1, sheet.nrows):
-        invoice = sheet.cell_value(row, 0)
-        product_id = sheet.cell_value(row, 1)
+        invoice = str(sheet.cell_value(row, 0))
+        product_id = str(sheet.cell_value(row, 1))
         if invoice in invoice_to_product:
             invoice_to_product[invoice].append(product_id)
         else:
@@ -50,6 +51,7 @@ if __name__ == '__main__':
     products = set()
     result = set()
     for v in invoice_to_product.values():
+        # if len(v) == 4:
         products = products.union(v)
 
     # 1 составить комбинации из N елементов
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     start = time.time()
     result = set()
     for i in range(1, support + 1):
-    # for i in range(1, 2):
+        # for i in range(1, 2):
         combinations = set(itertools.combinations(products, i))
         products_to_exclude = get_products_to_exclude(invoice_to_product.values(), combinations, support)
 
@@ -74,6 +76,6 @@ if __name__ == '__main__':
 
     end = time.time()
 
-    print(f"elapsed time = {end - start}")
     for el in result:
         print(el)
+    print(f"elapsed time = {end - start}")

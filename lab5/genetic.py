@@ -1,7 +1,7 @@
 from typing import List
 import xlrd
 from random import random
-
+from time import time
 
 class Person:
     def __init__(self, products: List[str]):
@@ -20,6 +20,9 @@ class Person:
     def __gt__(self, other):
         return self.fitness_value > other.fitness_value
 
+    def __repr__(self):
+        return f'Person(products = {self.products}; fitness_value = {self.fitness_value})'
+
 
 def get_population(data_set_name):
     sheet = xlrd.open_workbook(data_set_name).sheet_by_index(0)
@@ -33,7 +36,8 @@ def get_population(data_set_name):
         else:
             invoice_to_product[invoice] = [product_id]
     for k, v in invoice_to_product.items():
-        if len(v) > 3:
+        # if len(v) > 3:
+        if len(v) == 4:
             population_to_return.append(Person(v))
     return population_to_return, list(invoice_to_product.values())
 
@@ -77,12 +81,12 @@ def get_new_persons_using_tournament(population):
 
 
 def create_new_persons(first_parent_p: Person, second_parent_p: Person):
-    # first_person_to_return = Person([*first_parent_p.products[0:2], *second_parent_p.products[2:]])
-    # second_person_to_return = Person([*first_parent_p.products[2:], *second_parent_p.products[:2]])
-    min_length = len(first_parent_p.products) if len(first_parent_p.products) < len(second_parent_p.products) else len(second_parent_p.products)
-    index_of_genome_division = int(random() * min_length)
-    first_person_to_return = Person([*first_parent_p.products[:index_of_genome_division], *second_parent_p.products[index_of_genome_division:]])
-    second_person_to_return = Person([*first_parent_p.products[index_of_genome_division:], *second_parent_p.products[:index_of_genome_division]])
+    first_person_to_return = Person([*first_parent_p.products[0:2], *second_parent_p.products[2:]])
+    second_person_to_return = Person([*first_parent_p.products[2:], *second_parent_p.products[:2]])
+    # min_length = len(first_parent_p.products) if len(first_parent_p.products) < len(second_parent_p.products) else len(second_parent_p.products)
+    # index_of_genome_division = int(random() * min_length)
+    # first_person_to_return = Person([*first_parent_p.products[:index_of_genome_division], *second_parent_p.products[index_of_genome_division:]])
+    # second_person_to_return = Person([*first_parent_p.products[index_of_genome_division:], *second_parent_p.products[:index_of_genome_division]])
     return first_person_to_return, second_person_to_return
 
 
@@ -90,7 +94,8 @@ def insert_into_population(parents, children, population_p):
     for child in children:
         for parent in parents:
             if child > parent:
-                population_p.remove(parent)
+                if parent in population_p:
+                    population_p.remove(parent)
                 population_p.append(child)
 
 
@@ -113,21 +118,28 @@ def mutate(population_p, products_from_file_p):
 
 if __name__ == '__main__':
     # number_of_generations = int(input("Введите число эпох: "))
-    number_of_generations = 10
-    population, products_from_file = get_population('Online Retail Mini.xlsx')
+    number_of_generations = 4
+    # population, products_from_file = get_population('Online Retail Mini.xlsx') # contains only one person with 4 products
+    population, products_from_file = get_population('Online Retail.xlsx')
     for person in population:
         compute_fitness_values(person, products_from_file)
+        # print(person)
     persons_count = len(population)
-
+    print(f'population count = {persons_count}')
+    input()
+    start_time = time()
     for generation in range(number_of_generations):
         print(f'Поколение №{generation + 1}')
         for k in range(persons_count):
+            print(f'iteration № {k + 1}')
             first_parent, second_parent = get_new_persons_using_tournament(population)
             first_new_person, second_new_person = create_new_persons(first_parent, second_parent)
             compute_fitness_values(first_new_person, products_from_file)
             compute_fitness_values(second_new_person, products_from_file)
             insert_into_population([first_parent, second_parent], [first_new_person, second_new_person], population)
             mutate(population, products_from_file)
-
+    end_time = time()
+    population.sort(key=lambda it: it.fitness_value)
     for person in population:
-        print(person.products)
+        print(person)
+    print(f'elapsed time = {end_time - start_time}')
